@@ -1,6 +1,8 @@
 # tis-100.py
 import sys
 
+Debug=False
+
 # error codes
 errors={
 	0x00: 'No error',
@@ -22,22 +24,51 @@ class tis_node:
 		# instruction pointer
 		self.IP = 0
 
-		# list for instructions to be loaded into
+		# list for instructions
 		self.ins = []
+		
+		# list for labels
+		self.label = []
+		
+		# Original code
+		self.original_code=''
 
 	@property
 	def code(self):
-		return '\n'.join(self.ins)
+		return self.original_code
 
 	@code.setter
 	def code(self,text):
-		# load instructions into array
-		self.ins = text.splitlines()
-
-		# strip any spaces and tabs from instructions
-		for i in range(len(self.ins)):
-			self.ins[i] = self.ins[i].strip(' \t')
-
+		self.ins=[]
+		self.label=[]
+		
+		# save the original code
+		self.original_code = text
+		
+		for line in text.splitlines():
+			if Debug:
+				print ('Line: {}'.format(line))
+			
+			comment_sep = line.find('#')
+			line = line[0:comment_sep] if not comment_sep == -1 else line
+			label_sep = line.find(':')
+			label = line[0:label_sep].strip(' \t') if not label_sep == -1 else None
+			line = line[label_sep+1:] if not label_sep == -1 else line
+			line = line.strip(' \t')
+			args=line.replace(" ",",").split(",")
+			if Debug:
+				print('Stripped: {}'.format(line))
+				print('Label: {}'.format(label))
+				print('Op and args: {}'.format(args))
+				print('---')
+			if not args[0]=='':
+				self.ins.append(args)
+				self.label.append(label)
+		
+		if Debug:
+			print("List of labels:\n{}".format(self.label))
+			print("List of instructions:\n{}".format(self.ins))
+		
 	def reset(self):
 		'''Restart execution and reset registers'''
 		self.ACC = 0
@@ -49,101 +80,102 @@ class tis_node:
 		print ('ERR at instruction {}: {} ({})'.format(self.IP + 1, errors[code], code))
 	
 	def exec_next(self):
-		self.IP+=1
-		self.IP %= len(self.ins)
 		self.execute(self.IP)
 
-	def execute(self, opcode_index):
-		opcode = self.ins[opcode_index].split(' ')
-
-		if opcode[0] == 'NOP':
+	def execute(self, IP):
+		if Debug:
+			print("Executing: {}".format(self.ins[IP]))
+		opcode=self.ins[IP][0]
+		arg=self.ins[IP][1:]
+		is_jump_op=False
+		
+		if opcode == 'NOP':
 			pass
 	
-		elif opcode[0] == 'MOV':
-			val = self._read(opcode[1])
-			if opcode[2] == 'ACC':
+		elif opcode == 'MOV':
+			val = self._read(arg[0])
+			if arg[1] == 'ACC':
 				self.ACC = val
-			elif opcode[2] == 'OUT':
+			elif arg[1] == 'OUT':
 				print (val)
-			elif opcode[2] == 'NIL':
+			elif arg[1] == 'NIL':
 				pass
 			else:
 				self.error(0x02)
 	
-		elif opcode[0] == 'SWP':
+		elif opcode == 'SWP':
 			self.ACC, self.BAK = self.BAK, self.ACC
 
-		elif opcode[0] == 'SAV':
+		elif opcode == 'SAV':
 			self.BAK = self.ACC
 
-		elif opcode[0] == 'ADD':
-			val = self._read(opcode[1])
+		elif opcode == 'ADD':
+			val = self._read(arg[0])
 			self.ACC += val
 
-		elif opcode[0] == 'SUB':
-			val = self._read(opcode[1])
+		elif opcode == 'SUB':
+			val = self._read(arg[0])
 			self.ACC -= val
 
-		elif opcode[0] == 'NEG':
+		elif opcode == 'NEG':
 			self.ACC = int(-self.ACC)
 
-		elif opcode[0] == 'JMP':
+		elif opcode == 'JMP':
+			is_jump_op=True
 			try:
-				self.IP = self.ins.index(opcode[1] + ':')
+				self.IP = self.label.index(arg[0])
 			except:
 				self.error(0x03)
 
-		elif opcode[0] == 'JEZ':
+		elif opcode == 'JEZ':
 			if self.ACC == 0:
+				is_jump_op=True
 				try:
-					self.IP = self.ins.index(opcode[1] + ':')
+					self.IP = self.label.index(arg[0])
 				except:
 					self.error(0x03)
 
-		elif opcode[0] == 'JNZ':
+		elif opcode == 'JNZ':
 			if self.ACC != 0:
+				is_jump_op=True
 				try:
-					self.IP = self.ins.index(opcode[1] + ':')
+					self.IP = self.label.index(arg[0])
 				except:
 					self.error(0x03)
 
-		elif opcode[0] == 'JGZ':
+		elif opcode == 'JGZ':
 			if self.ACC > 0:
+				is_jump_op=True
 				try:
-					self.IP = self.ins.index(opcode[1] + ':')
+					self.IP = self.label.index(arg[0])
 				except:
 					self.error(0x03)
 
-		elif opcode[0] == 'JLZ':
+		elif opcode == 'JLZ':
 			if self.ACC < 0:
+				is_jump_op=True
 				try:
-					self.IP = self.ins.index(opcode[1] + ':')
+					self.IP = self.label.index(arg[0])
 				except:
 					self.error(0x03)
 
-		elif opcode[0] == 'JRO':
-			val = self._read(opcode[1])
+		elif opcode == 'JRO':
+			is_jump_op=True
+			val = self._read(arg[0])
 			try:
 				self.IP += val
 			except:
 				self.error(0x04)
 
-		elif opcode[0].endswith(':'):
-			# this is a label, do nothing
-			pass
-
-		elif opcode[0].startswith('#'):
-			# this is a comment, do nothing
-			pass
-
-		elif opcode[0] == '':
-			# this is whitespace, do nothing
-			pass
-
 		# if none of the above, must be an invalid instruction
 		else:
+			print("ERROR! Opcode: '{}'".format(opcode))
 			self.error(0x01)
 		
+		if not is_jump_op:
+			self.IP+=1
+			self.IP %= len(self.ins)
+
 	def _read(self, source):
 		'''Read a value.'''
 		if source=='NIL':
