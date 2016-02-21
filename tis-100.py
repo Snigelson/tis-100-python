@@ -9,135 +9,151 @@ ERR code 0x03: invalid label
 ERR code 0x04: invalid offset
 '''
 
-# ACC & BAK registers
-ACC = 0
-BAK = 0
+class tis_node:
+	def __init__(self):
+		'''Initialize TIS node.'''
+		# ACC & BAK registers
+		self.ACC = 0
+		self.BAK = 0
 
-# instruction pointer
-IP = 0
+		# instruction pointer
+		self.IP = 0
 
-# list for instructions to be loaded into
-ins = []
+		# list for instructions to be loaded into
+		self.ins = []
 
-# load instructions into array
-with open(sys.argv[1]) as f:
-	ins = f.read().splitlines()
+	@property
+	def code(self):
+		return '\n'.join(self.ins)
 
-# strip any spaces and tabs from instructions
-for i in range(len(ins)):
-	ins[i] = ins[i].strip(' \t')
+	@code.setter
+	def code(self,text):
+		# load instructions into array
+		self.ins = text.splitlines()
 
-# handle errors
-def error(code):
-	print 'ERR at instruction %s code %s' % (IP + 1, code)	
+		# strip any spaces and tabs from instructions
+		for i in range(len(self.ins)):
+			self.ins[i] = self.ins[i].strip(' \t')
+
+	# handle errors
+	def error(self,code):
+		print ('ERR at instruction {}: code {}'.format(self.IP + 1, code))
 
 # main execution loop
-def execute(opcode_full):
-	global ACC
-	global BAK
-	global IP
+	def execute(self, opcode_index):
+		opcode = self.ins[opcode_index].split(' ')
 
-	opcode = opcode_full.split(' ')
+		print(opcode)
 
-	# no god damn switch/case...
-	if opcode[0] == 'NOP':
-		pass
-	
-	elif opcode[0] == 'MOV':
-		if opcode[2] == 'ACC':
-			ACC = int(opcode[1])
-		elif opcode[2] == 'OUT':
-			if opcode[1] == 'ACC':
-				print ACC
-			else:
-				print opcode[1]
-		elif opcode[2] == 'NIL':
+		if opcode[0] == 'NOP':
 			pass
-		else:
-			error(0x02)
 	
-	elif opcode[0] == 'SWP':
-		ACC, BAK = BAK, ACC
-
-	elif opcode[0] == 'SAV':
-		BAK = ACC
-
-	elif opcode[0] == 'ADD':
-		if opcode[1] == 'ACC':
-			ACC += ACC
-		else:
-			ACC += int(opcode[1])
-
-	elif opcode[0] == 'SUB':
-		if opcode[1] == 'ACC':
-			ACC -= ACC
-		else:
-			ACC -= int(opcode[1])
-
-	elif opcode[0] == 'NEG':
-		ACC = int(-ACC)
-
-	elif opcode[0] == 'JMP':
-		try:
-			IP = ins.index(opcode[1] + ':')
-		except:
-			error(0x03)
-
-	elif opcode[0] == 'JEZ':
-		if ACC == 0:
-			try:
-				IP = ins.index(opcode[1] + ':')
-			except:
-				error(0x03)
-
-	elif opcode[0] == 'JNZ':
-		if ACC != 0:
-			try:
-				IP = ins.index(opcode[1] + ':')
-			except:
-				error(0x03)
-
-	elif opcode[0] == 'JGZ':
-		if ACC > 0:
-			try:
-				IP = ins.index(opcode[1] + ':')
-			except:
-				error(0x03)
-
-	elif opcode[0] == 'JLZ':
-		if ACC < 0:
-			try:
-				IP = ins.index(opcode[1] + ':')
-			except:
-				error(0x03)
-
-	elif opcode[0] == 'JRO':
-		try:
-			if opcode[1] == 'ACC':
-				IP = ACC
+		elif opcode[0] == 'MOV':
+			if opcode[2] == 'ACC':
+				self.ACC = int(opcode[1])
+			elif opcode[2] == 'OUT':
+				if opcode[1] == 'ACC':
+					print (self.ACC)
+				else:
+					print (opcode[1])
+			elif opcode[2] == 'NIL':
+				pass
 			else:
-				IP = IP + int(opcode[1])
-		except:
-			error(0x04)
+				self.error(0x02)
+	
+		elif opcode[0] == 'SWP':
+			self.ACC, self.BAK = self.BAK, self.ACC
 
-	elif opcode[0].endswith(':'):
-		# this is a label, do nothing
-		pass
+		elif opcode[0] == 'SAV':
+			self.BAK = self.ACC
 
-	elif opcode[0].startswith('#'):
-		# this is a comment, do nothing
-		pass
+		elif opcode[0] == 'ADD':
+			if opcode[1] == 'ACC':
+				self.ACC += self.ACC
+			else:
+				self.ACC += int(opcode[1])
 
-	elif opcode[0] == '':
-		# this is whitespace, do nothing
-		pass
+		elif opcode[0] == 'SUB':
+			if opcode[1] == 'ACC':
+				self.ACC -= self.ACC
+			else:
+				self.ACC -= int(opcode[1])
 
-	# if none of the above, must be an invalid instruction
-	else:
-		error(0x01)
+		elif opcode[0] == 'NEG':
+			self.ACC = int(-self.ACC)
+
+		elif opcode[0] == 'JMP':
+			try:
+				self.IP = self.ins.index(opcode[1] + ':')
+			except:
+				self.error(0x03)
+
+		elif opcode[0] == 'JEZ':
+			if self.ACC == 0:
+				try:
+					self.IP = self.ins.index(opcode[1] + ':')
+				except:
+					self.error(0x03)
+
+		elif opcode[0] == 'JNZ':
+			if self.ACC != 0:
+				try:
+					self.IP = self.ins.index(opcode[1] + ':')
+				except:
+					self.error(0x03)
+
+		elif opcode[0] == 'JGZ':
+			if self.ACC > 0:
+				try:
+					self.IP = self.ins.index(opcode[1] + ':')
+				except:
+					self.error(0x03)
+
+		elif opcode[0] == 'JLZ':
+			if self.ACC < 0:
+				try:
+					self.IP = self.ins.index(opcode[1] + ':')
+				except:
+					self.error(0x03)
+
+		elif opcode[0] == 'JRO':
+			try:
+				if opcode[1] == 'ACC':
+					self.IP = self.ACC
+				else:
+					self.IP = self.IP + int(opcode[1])
+			except:
+				self.error(0x04)
+
+		elif opcode[0].endswith(':'):
+			# this is a label, do nothing
+			pass
+
+		elif opcode[0].startswith('#'):
+			# this is a comment, do nothing
+			pass
+
+		elif opcode[0] == '':
+			# this is whitespace, do nothing
+			pass
+
+		# if none of the above, must be an invalid instruction
+		else:
+			self.error(0x01)
+		
+		self.IP += 1
 
 if __name__=="__main__":
+	with open(sys.argv[1]) as f:
+		code = f.read()
+
+	tis=tis_node()
+	tis.code=code
+
+	while True:
+		tis.execute(tis.IP)
+	
 	# iterate through list, execute instructions
-	while IP < len(ins):
-		execute(ins[IP])
-		IP += 1
+#	while IP < len(ins):
+#		execute(ins[IP])
+#		IP += 1
