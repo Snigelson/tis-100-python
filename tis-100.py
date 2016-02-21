@@ -47,8 +47,12 @@ class tis_node:
 	# handle errors
 	def error(self,code):
 		print ('ERR at instruction {}: {} ({})'.format(self.IP + 1, errors[code], code))
+	
+	def exec_next(self):
+		self.IP+=1
+		self.IP %= len(self.ins)
+		self.execute(self.IP)
 
-# main execution loop
 	def execute(self, opcode_index):
 		opcode = self.ins[opcode_index].split(' ')
 
@@ -148,8 +152,6 @@ class tis_node:
 		else:
 			self.error(0x01)
 		
-		self.IP += 1
-
 if __name__=="__main__":
 	with open(sys.argv[1]) as f:
 		code = f.read()
@@ -158,9 +160,4 @@ if __name__=="__main__":
 	tis.code=code
 
 	while True:
-		tis.execute(tis.IP)
-	
-	# iterate through list, execute instructions
-#	while IP < len(ins):
-#		execute(ins[IP])
-#		IP += 1
+		tis.exec_next()
