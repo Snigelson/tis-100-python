@@ -60,13 +60,11 @@ class tis_node:
 			pass
 	
 		elif opcode[0] == 'MOV':
+			val = self._read(opcode[1])
 			if opcode[2] == 'ACC':
-				self.ACC = int(opcode[1])
+				self.ACC = val
 			elif opcode[2] == 'OUT':
-				if opcode[1] == 'ACC':
-					print (self.ACC)
-				else:
-					print (opcode[1])
+				print (val)
 			elif opcode[2] == 'NIL':
 				pass
 			else:
@@ -79,16 +77,12 @@ class tis_node:
 			self.BAK = self.ACC
 
 		elif opcode[0] == 'ADD':
-			if opcode[1] == 'ACC':
-				self.ACC += self.ACC
-			else:
-				self.ACC += int(opcode[1])
+			val = self._read(opcode[1])
+			self.ACC += val
 
 		elif opcode[0] == 'SUB':
-			if opcode[1] == 'ACC':
-				self.ACC -= self.ACC
-			else:
-				self.ACC -= int(opcode[1])
+			val = self._read(opcode[1])
+			self.ACC -= val
 
 		elif opcode[0] == 'NEG':
 			self.ACC = int(-self.ACC)
@@ -128,11 +122,9 @@ class tis_node:
 					self.error(0x03)
 
 		elif opcode[0] == 'JRO':
+			val = self._read(opcode[1])
 			try:
-				if opcode[1] == 'ACC':
-					self.IP += self.ACC
-				else:
-					self.IP += int(opcode[1])
+				self.IP += val
 			except:
 				self.error(0x04)
 
@@ -151,6 +143,15 @@ class tis_node:
 		# if none of the above, must be an invalid instruction
 		else:
 			self.error(0x01)
+		
+	def _read(self, source):
+		'''Read a value.'''
+		if source=='NIL':
+			return 0
+		if source=='ACC':
+			return self.ACC
+		else:
+			return int(source)
 		
 if __name__=="__main__":
 	with open(sys.argv[1]) as f:
