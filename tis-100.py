@@ -2,12 +2,15 @@
 import sys
 
 # error codes
-'''
-ERR code 0x01: invalid instruction
-ERR code 0x02: invalid register
-ERR code 0x03: invalid label
-ERR code 0x04: invalid offset
-'''
+errors={
+	0x00: 'No error',
+	0x01: 'Invalid instruction',
+	0x02: 'Invalid register',
+	0x03: 'Invalid label',
+	0x04: 'Invalid offset',
+	0x05: 'Blocking read', #No node connected
+	0x06: 'Blocking write' #No node connected
+	}
 
 class tis_node:
 	def __init__(self):
@@ -43,13 +46,11 @@ class tis_node:
 
 	# handle errors
 	def error(self,code):
-		print ('ERR at instruction {}: code {}'.format(self.IP + 1, code))
+		print ('ERR at instruction {}: {} ({})'.format(self.IP + 1, errors[code], code))
 
 # main execution loop
 	def execute(self, opcode_index):
 		opcode = self.ins[opcode_index].split(' ')
-
-		print(opcode)
 
 		if opcode[0] == 'NOP':
 			pass
