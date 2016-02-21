@@ -168,10 +168,11 @@ class tis_node:
 				self.IP += val
 			except:
 				self.error(0x04)
+			self.IP=max(self.IP,0)
+			self.IP=min(self.IP,len(self.ins)-1)
 
 		# if none of the above, must be an invalid instruction
 		else:
-			print("ERROR! Opcode: '{}'".format(opcode))
 			self.error(0x01)
 		
 		if not is_jump_op:
