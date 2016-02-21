@@ -125,9 +125,9 @@ class tis_node:
 		elif opcode[0] == 'JRO':
 			try:
 				if opcode[1] == 'ACC':
-					self.IP = self.ACC
+					self.IP += self.ACC
 				else:
-					self.IP = self.IP + int(opcode[1])
+					self.IP += int(opcode[1])
 			except:
 				self.error(0x04)
 
