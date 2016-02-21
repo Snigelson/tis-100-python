@@ -136,7 +136,8 @@ def execute(opcode_full):
 	else:
 		error(0x01)
 
-# iterate through list, execute instructions
-while IP < len(ins):
-	execute(ins[IP])
-	IP += 1
+if __name__=="__main__":
+	# iterate through list, execute instructions
+	while IP < len(ins):
+		execute(ins[IP])
+		IP += 1
