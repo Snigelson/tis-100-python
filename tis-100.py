@@ -35,6 +35,12 @@ class tis_node:
 		for i in range(len(self.ins)):
 			self.ins[i] = self.ins[i].strip(' \t')
 
+	def reset(self):
+		'''Restart execution and reset registers'''
+		self.ACC = 0
+		self.BAK = 0
+		self.IP = 0
+
 	# handle errors
 	def error(self,code):
 		print ('ERR at instruction {}: code {}'.format(self.IP + 1, code))
