@@ -1,7 +1,7 @@
 # tis-100.py
 import sys
 
-Debug=False
+Debug=True
 
 # error codes
 errors={
@@ -55,13 +55,15 @@ class tis_node:
 			label = line[0:label_sep].strip(' \t') if not label_sep == -1 else None
 			line = line[label_sep+1:] if not label_sep == -1 else line
 			line = line.strip(' \t')
-			args=line.replace(" ",",").split(",")
+			args=line.replace(","," ").split()
+			#args=line.replace(" ",",").split(",")
+			
 			if Debug:
 				print('Stripped: {}'.format(line))
 				print('Label: {}'.format(label))
 				print('Op and args: {}'.format(args))
 				print('---')
-			if not args[0]=='':
+			if not args==[]:
 				self.ins.append(args)
 				self.label.append(label)
 		
