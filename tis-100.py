@@ -1,7 +1,7 @@
 # tis-100.py
 import sys
 
-Debug=True
+Debug=False
 
 # error codes
 errors={
