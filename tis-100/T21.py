@@ -33,6 +33,10 @@ class tis_node:
 		# Original code
 		self.original_code=''
 
+		# Data read and write callbacks
+		self.read_callback=None
+		self.write_callback=None
+
 	@property
 	def code(self):
 		return self.original_code
@@ -96,14 +100,7 @@ class tis_node:
 	
 		elif opcode == 'MOV':
 			val = self._read(arg[0])
-			if arg[1] == 'ACC':
-				self.ACC = val
-			elif arg[1] == 'OUT':
-				print (val)
-			elif arg[1] == 'NIL':
-				pass
-			else:
-				self.error(0x02)
+			self._write(arg[1],val)
 	
 		elif opcode == 'SWP':
 			self.ACC, self.BAK = self.BAK, self.ACC
@@ -183,11 +180,25 @@ class tis_node:
 		'''Read a value.'''
 		if source=='NIL':
 			return 0
-		if source=='ACC':
+		elif source=='ACC':
 			return self.ACC
+		elif source=='IN':
+			import sys
+			return int(sys.stdin.readline())
 		else:
 			return int(source)
-		
+
+	def _write(self, dest, val):
+		if dest == 'ACC':
+			self.ACC = val
+		elif dest == 'OUT':
+			import sys
+			sys.stdout.write(str(val)+'\n')
+		elif dest == 'NIL':
+			pass
+		else:
+			self.error(0x02)
+
 if __name__=="__main__":
 	with open(sys.argv[1]) as f:
 		code = f.read()
