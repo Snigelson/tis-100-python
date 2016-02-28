@@ -2,12 +2,16 @@ import sys
 import T21
 import T50
 import queue
+import threading
 
 class TIS_100:
 	def __init__(self):
 		# Nodes
 		self.nodes={}
 		
+		# Clock tick
+		self.tick=threading.Condition()
+	
 	def add_T21_node(self, name, code):
 		'''Add a computation node named name, with code.'''
 		new_node=T21.T21()
@@ -35,30 +39,25 @@ class TIS_100:
 			print("Trying to add invalid port.") # Lol descriptive error messages.
 			raise
 
+	def _exec_on_tick(self, func, _tick):
+		while True:
+			with _tick:
+				_tick.wait()
+			func()
+
+	def start(self):
+		for node in self.nodes:
+			t = threading.Thread(name=str(node), target=self._exec_on_tick, args=(self.nodes[node].exec_next,self.tick))
+			t.start()
+
 	def exec_one(self):
-		for n in self.nodes:
-			try:
-				self.nodes[n].exec_next()
-			except queue.Empty:
-				#print("Node {} is waiting to read this cycle.".format(n))
-				pass
-			except queue.Full:
-				#print("Node {} is waiting to writ this cycle.".format(n))
-				pass
-			else:
-				#print("Node {} executed this cycle.".format(n))
-				pass
+		with self.tick:
+			self.tick.notify_all()
 
 if __name__=="__main__":
+	import time
+	
 	tis=TIS_100()
-	if False:
-		with open(sys.argv[1]) as f:
-			code = f.read()
-		tis.add_T21_node('snopp',code)
-		tis.add_T50_node('stdin_node', sys.stdin)
-		tis.add_T50_node('stdout_node', sys.stdout)
-		tis.add_port('stdin_node','foo','snopp','IN')
-		tis.add_port('snopp','OUT','stdout_node','bar')
 	if True:
 		with open("../duplicator.100") as f:
 			dcode = f.read()
@@ -71,6 +70,9 @@ if __name__=="__main__":
 		tis.add_port('stdin_node','foo','duplicator','IN')
 		tis.add_port('duplicator','DOWN','adder','UP')
 		tis.add_port('adder','OUT','stdout_node','bar')
-		
+		tis.start()
+	
 	while True:
 		tis.exec_one()
+		print("tick")
+		time.sleep(0.2)

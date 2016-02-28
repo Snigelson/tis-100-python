@@ -1,6 +1,7 @@
 # T50 - File node
 import sys
 import _node
+import queue
 
 class T50(_node._node):
 	def __init__(self):
@@ -20,19 +21,15 @@ class T50(_node._node):
 
 	def exec_next(self):
 		if len(self.in_ports)==1:
-			self.write(next(iter(self.in_ports.values())).get_nowait())
+			port=next(iter(self.in_ports.values()))
+			val=port.get()
+			port.task_done()
+			self.write(val)
 		elif len(self.out_ports)==1:
 			port=next(iter(self.out_ports.values()))
-			if port.full():
-				import queue
-				raise queue.Full # Ugly way of still triggering queue.Full and preserving input
-			else:
-				try:
-					value=self.read()
-				except ValueError:
-					import queue
-					raise queue.Empty
-			next(iter(self.out_ports.values())).put_nowait(value)
+			value=self.read()
+			port.put(value)
+			port.join()
 		else:
 			raise Exception("File has no ports!")
 		

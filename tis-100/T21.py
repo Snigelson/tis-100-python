@@ -3,11 +3,6 @@ Debug=False
 
 import _node
 
-# TODO:
-# Should the execution halt on a blocking read or write, and parallelization be done using threads? (semi-complex)
-# Or should the execute function just return without incrementing the instruction pointer? (naïve)
-# Or synchronization using Queue.task_done() and Queue.join()?
-
 # error codes
 errors={
 	0x00: 'No error',
@@ -189,7 +184,10 @@ class T21(_node._node):
 			return self.ACC
 		else:
 			if source in self.in_ports:
-				return self.in_ports[source].get_nowait()
+				port = self.in_ports[source]
+				val = port.get()
+				port.task_done()
+				return val
 			else:
 				return int(source)
 
@@ -199,7 +197,9 @@ class T21(_node._node):
 		elif dest == 'NIL':
 			pass
 		elif dest in self.out_ports:
-			return self.out_ports[dest].put_nowait(val)
+			port = self.out_ports[dest]
+			port.put(val)
+			port.join()
 		else:
 			self.error(0x02)
 
