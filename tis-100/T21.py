@@ -1,7 +1,12 @@
-# tis-100.py
-import sys
-
+# T21 - Execution node
 Debug=False
+
+import _node
+
+# TODO:
+# Should the execution halt on a blocking read or write, and parallelization be done using threads? (semi-complex)
+# Or should the execute function just return without incrementing the instruction pointer? (naïve)
+# Or synchronization using Queue.task_done() and Queue.join()?
 
 # error codes
 errors={
@@ -14,7 +19,7 @@ errors={
 	0x06: 'Blocking write' #No node connected
 	}
 
-class tis_node:
+class T21(_node._node):
 	def __init__(self):
 		'''Initialize TIS node.'''
 		# ACC & BAK registers
@@ -23,6 +28,9 @@ class tis_node:
 
 		# instruction pointer
 		self.IP = 0
+
+		# name
+		self.name=''
 
 		# list for instructions
 		self.ins = []
@@ -33,9 +41,7 @@ class tis_node:
 		# Original code
 		self.original_code=''
 
-		# Data read and write callbacks
-		self.read_callback=None
-		self.write_callback=None
+		super().__init__()
 
 	@property
 	def code(self):
@@ -60,7 +66,6 @@ class tis_node:
 			line = line[label_sep+1:] if not label_sep == -1 else line
 			line = line.strip(' \t')
 			args=line.replace(","," ").split()
-			#args=line.replace(" ",",").split(",")
 			
 			if Debug:
 				print('Stripped: {}'.format(line))
@@ -74,7 +79,7 @@ class tis_node:
 		if Debug:
 			print("List of labels:\n{}".format(self.label))
 			print("List of instructions:\n{}".format(self.ins))
-		
+	
 	def reset(self):
 		'''Restart execution and reset registers'''
 		self.ACC = 0
@@ -174,7 +179,7 @@ class tis_node:
 		
 		if not is_jump_op:
 			self.IP+=1
-			self.IP %= len(self.ins)
+			self.IP%=len(self.ins)
 
 	def _read(self, source):
 		'''Read a value.'''
@@ -182,28 +187,28 @@ class tis_node:
 			return 0
 		elif source=='ACC':
 			return self.ACC
-		elif source=='IN':
-			import sys
-			return int(sys.stdin.readline())
 		else:
-			return int(source)
+			if source in self.in_ports:
+				return self.in_ports[source].get_nowait()
+			else:
+				return int(source)
 
 	def _write(self, dest, val):
 		if dest == 'ACC':
 			self.ACC = val
-		elif dest == 'OUT':
-			import sys
-			sys.stdout.write(str(val)+'\n')
 		elif dest == 'NIL':
 			pass
+		elif dest in self.out_ports:
+			return self.out_ports[dest].put_nowait(val)
 		else:
 			self.error(0x02)
 
 if __name__=="__main__":
+	import sys
 	with open(sys.argv[1]) as f:
 		code = f.read()
 
-	tis=tis_node()
+	tis=T21()
 	tis.code=code
 
 	while True:
