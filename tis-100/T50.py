@@ -1,12 +1,5 @@
 # T50 - File node
 import sys
-
-# I wonder. Should this node instead each tick try to read a line from the file and push the value onto the port-queue?
-
-# I am starting to smell a possible pattern of inheritance.
-
-# TODO: File direction!
-
 import _node
 
 class T50(_node._node):
