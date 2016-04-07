@@ -19,12 +19,6 @@ class _node:
 	def exec_next(self):
 		raise NotImplementedError
 
-	def read(self):
-		raise NotImplementedError
-
-	def write(self, val):
-		raise NotImplementedError
-
 	def _read_port(self, port):
 		val=port.get()
 		port.task_done()

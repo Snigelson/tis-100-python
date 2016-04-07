@@ -23,16 +23,11 @@ class T50(_node._node):
 		if len(self.in_ports)==1:
 			port=next(iter(self.in_ports.values()))
 			val=super()._read_port(port)
-			self.write(val)
+			self.fd.write(str(val)+'\n')
 		elif len(self.out_ports)==1:
 			port=next(iter(self.out_ports.values()))
-			value=self.read()
+			value=int(self.fd.readline())
 			super()._write_port(port,value)
 		else:
 			raise Exception("File has no ports!")
-		
-	def read(self):
-		return int(self.fd.readline())
 	
-	def write(self, val):
-		self.fd.write(str(val)+'\n')
