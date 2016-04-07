@@ -21,6 +21,15 @@ class _node:
 
 	def read(self):
 		raise NotImplementedError
-	
+
 	def write(self, val):
 		raise NotImplementedError
+
+	def _read_port(self, port):
+		val=port.get()
+		port.task_done()
+		return val
+
+	def _write_port(self, port, value):
+		port.put(value)
+		port.join()

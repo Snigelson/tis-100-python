@@ -22,14 +22,12 @@ class T50(_node._node):
 	def exec_next(self):
 		if len(self.in_ports)==1:
 			port=next(iter(self.in_ports.values()))
-			val=port.get()
-			port.task_done()
+			val=super()._read_port(port)
 			self.write(val)
 		elif len(self.out_ports)==1:
 			port=next(iter(self.out_ports.values()))
 			value=self.read()
-			port.put(value)
-			port.join()
+			super()._write_port(port,value)
 		else:
 			raise Exception("File has no ports!")
 		

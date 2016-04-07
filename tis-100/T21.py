@@ -185,9 +185,7 @@ class T21(_node._node):
 		else:
 			if source in self.in_ports:
 				port = self.in_ports[source]
-				val = port.get()
-				port.task_done()
-				return val
+				return super()._read_port(port)
 			else:
 				return int(source)
 
@@ -198,8 +196,7 @@ class T21(_node._node):
 			pass
 		elif dest in self.out_ports:
 			port = self.out_ports[dest]
-			port.put(val)
-			port.join()
+			super()._write_port(port,val)
 		else:
 			self.error(0x02)
 
