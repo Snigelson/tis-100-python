@@ -30,8 +30,8 @@ class T21(_node._node):
 		# list for instructions
 		self.ins = []
 		
-		# list for labels
-		self.label = []
+		# dict for labels
+		self.label = {}
 		
 		# Original code
 		self.original_code=''
@@ -45,7 +45,7 @@ class T21(_node._node):
 	@code.setter
 	def code(self,text):
 		self.ins=[]
-		self.label=[]
+		self.label={}
 		
 		# save the original code
 		self.original_code = text
@@ -69,7 +69,8 @@ class T21(_node._node):
 				print('---')
 			if not args==[]:
 				self.ins.append(args)
-				self.label.append(label)
+			if not label is None:
+				self.label[label]=len(self.ins)
 		
 		if Debug:
 			print("List of labels:\n{}".format(self.label))
@@ -122,7 +123,7 @@ class T21(_node._node):
 		elif opcode == 'JMP':
 			is_jump_op=True
 			try:
-				self.IP = self.label.index(arg[0])
+				self.IP = self.label[arg[0]]
 			except:
 				self.error(0x03)
 
@@ -130,7 +131,7 @@ class T21(_node._node):
 			if self.ACC == 0:
 				is_jump_op=True
 				try:
-					self.IP = self.label.index(arg[0])
+					self.IP = self.label[arg[0]]
 				except:
 					self.error(0x03)
 
@@ -138,7 +139,7 @@ class T21(_node._node):
 			if self.ACC != 0:
 				is_jump_op=True
 				try:
-					self.IP = self.label.index(arg[0])
+					self.IP = self.label[arg[0]]
 				except:
 					self.error(0x03)
 
@@ -146,7 +147,7 @@ class T21(_node._node):
 			if self.ACC > 0:
 				is_jump_op=True
 				try:
-					self.IP = self.label.index(arg[0])
+					self.IP = self.label[arg[0]]
 				except:
 					self.error(0x03)
 
@@ -154,7 +155,7 @@ class T21(_node._node):
 			if self.ACC < 0:
 				is_jump_op=True
 				try:
-					self.IP = self.label.index(arg[0])
+					self.IP = self.label[arg[0]]
 				except:
 					self.error(0x03)
 
@@ -166,7 +167,7 @@ class T21(_node._node):
 			except:
 				self.error(0x04)
 			self.IP=max(self.IP,0)
-			self.IP=min(self.IP,len(self.ins)-1)
+#			self.IP=min(self.IP,len(self.ins)-1)
 
 		# if none of the above, must be an invalid instruction
 		else:
@@ -174,7 +175,8 @@ class T21(_node._node):
 		
 		if not is_jump_op:
 			self.IP+=1
-			self.IP%=len(self.ins)
+		
+		self.IP%=len(self.ins)
 
 	def _read(self, source):
 		'''Read a value.'''

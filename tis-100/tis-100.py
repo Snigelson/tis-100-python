@@ -56,13 +56,15 @@ class TIS_100:
 
 if __name__=="__main__":
 	import time
+	import sys
 	
 	tis=TIS_100()
-	if True:
+	if False:
 		with open("../duplicator.100") as f:
 			dcode = f.read()
 		with open("../adder.100") as f:
 			acode = f.read()
+
 		tis.add_T21_node('duplicator',dcode)
 		tis.add_T21_node('adder',acode)
 		tis.add_T50_node('stdin_node', sys.stdin)
@@ -70,7 +72,18 @@ if __name__=="__main__":
 		tis.add_port('stdin_node','foo','duplicator','IN')
 		tis.add_port('duplicator','DOWN','adder','UP')
 		tis.add_port('adder','OUT','stdout_node','bar')
-		tis.start()
+		
+	if True:
+		with open("../test.100") as f:
+			tcode = f.read()
+
+		tis.add_T21_node('test_node',tcode)
+		tis.add_T50_node('stdin_node', sys.stdin)
+		tis.add_T50_node('stdout_node', sys.stdout)
+		tis.add_port('stdin_node','foo','test_node','IN')
+		tis.add_port('test_node','OUT','stdout_node','bar')
+	
+	tis.start()
 	
 	while True:
 		tis.exec_one()
