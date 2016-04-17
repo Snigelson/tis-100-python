@@ -1,0 +1,12 @@
+# Testing some things
+	MOV IN, ACC
+	ADD ACC
+	SAV
+S:	SWP
+	SUB 1 #kk!
+	MOV ACC, OUT
+	SWP
+	SUB 1
+	JLZ DONE
+	JRO -4
+	DONE: ,,MOV, 999 ,OUT
